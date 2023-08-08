@@ -24,6 +24,7 @@ function setVariables() {
     window.tipOn = false;
     window.tooltipTimeout = undefined;
     window.factionInfoTimeout = undefined;
+    window.constellationInfoTimeout = undefined;
     window.onmousemove = function(e) {
         let mouse_x = e.clientX;
         let mouse_y = e.clientY;

@@ -122,7 +122,7 @@ function fetchSheets(urls) {
 
 function mapFromSheets(sheets, params) {
 
-    let sheet_names = ['PlanetMap', 'SectorObjects', 'FactionTracker', 'AssetTracker'];
+    let sheet_names = ['PlanetMap', 'SectorObjects', 'FactionTracker', 'AssetTracker','Constellations'];
     let redirect = false;
     let missing = [];
     sheets.forEach((sheet, index) => {
@@ -141,13 +141,16 @@ function mapFromSheets(sheets, params) {
             .then(payload => seedSystemsAndPlanets(payload, sheets))
             .then(payload => seedAssets(payload, sheets))
             .then(payload => seedSystemObjects(payload, sheets))
+            .then(payload => seedConstellations(payload,sheets))
             .then(attachSystemObjects)
             .then(attachPlanetObjects)
             .then(attachBlackHoleObjects)
             .then(arrangePlanets)
+            .then(arrangeConstellations)
             .then(recolorPlanets)
             .then(reorderAssets)
-            .then(buildFactionOverview);
+            .then(buildFactionOverview)
+            .then(buildConstellationOverview);
     }
 }
 
@@ -194,6 +197,18 @@ function buildFactionOverview() {
     document.body.appendChild(factionOverview);
 }
 
+function buildConstellationOverview(){
+    let constellationOverview = document.createElement('div');
+    constellationOverview.id = 'constellation-overview';
+    for(let constellation in tracker.constellations){
+        if (tracker.constellations.hasOwnProperty(constellation)){
+            let row = tracker.constellations[constellation];
+            constellationOverview.appendChild(ConstellationRow(row));
+        }
+    }
+    document.body.appendChild(constellationOverview);
+}
+
 function factionRow(fac) {
     let container = document.createElement('div');
     container.id = fac.short.toLowerCase() + '-container';
@@ -210,6 +225,33 @@ function factionRow(fac) {
     color.style.backgroundColor = fac.color;
     container.appendChild(name);
     container.appendChild(color);
+    return container;
+}
+
+function ConstellationRow(row){
+    //Create constellation div, give ID, and set CSS class it references
+    let container = document.createElement('div');
+    container.id = row.name.toLowerCase();
+    container.classList.add('constellation-container');
+    //Create constellation name div, set ID and CSS class, set div text based on constellation name length
+    let name = document.createElement('div');
+    name.id = row.name+'-name';
+    name.classList.add('constellation-name');
+    if (row.name.length < 15){
+        name.innerHTML = row.name.toUpperCase();
+    }else{
+        name.innerHTML = row.name.toUpperCase().slice(0,12)+'...';
+    }
+    name.setAttribute('onmouseenter', `displayConstellationInfo("${encodeURIComponent(row.name)}")`);
+    name.setAttribute('onmouseleave', 'hideConstellationInfo()');
+    //Create constellation color div, set ID and CSS class, set color shade so it is visible in this location
+    let color = document.createElement('div');
+    color.id = row.name.toLowerCase()+'-color';
+    color.classList.add('constellation-color');
+    color.style.backgroundColor = shadeColor(row.color,40);
+    //Add color and name divs to the constellation element, return constellation element
+    container.appendChild(color);
+    container.appendChild(name);
     return container;
 }
 
@@ -270,7 +312,12 @@ function hexVertices(hex_x, hex_y, hex_w, hex_h) {
 function resetHexColors() {
     for (let hex in tracker.hexes) {
         if (tracker.hexes.hasOwnProperty(hex)) {
-            tracker.hexes[hex].color('#222222');
+             if (tracker.hexes[hex].originalcolor != '#222222'){
+                tracker.hexes[hex].color(shadeColor(tracker.hexes[hex].originalcolor,120));
+            }else{
+                tracker.hexes[hex].color(tracker.hexes[hex].originalcolor);
+            }
+
         }
     }
 }
@@ -424,6 +471,20 @@ function seedSystemObjects(payload, sheets) {
     });
 }
 
+function seedConstellations(payload,sheets){
+    return new Promise(resolve => {
+        tracker['constellations'] = {};
+        sheets[4].forEach(row => {
+            let container = document.createElement('div');
+            if(row['Name'] != ''){
+                let newConstellation = tracker.constellations[row['Name']] = new Constellation(row);
+                newConstellation.color = tracker.factions[tracker.constellations[newConstellation.name].faction].color;         
+            }           
+        });
+        resolve(payload);
+    });
+}
+
 function arrangePlanets() {
     return new Promise(resolve => {
         for (let system in tracker.systems) {
@@ -451,6 +512,29 @@ function arrangePlanets() {
         resolve();
     });
 }
+
+function arrangeConstellations(){
+    return new Promise(resolve =>{
+        for(let constellation in tracker.constellations){
+            if(tracker.constellations.hasOwnProperty(constellation)){
+                for(let hex in tracker.constellations[constellation].memberList){
+                    currentHex = tracker.constellations[constellation].memberList[hex]
+                    newColor = shadeColor(tracker.factions[tracker.constellations[constellation].faction].color,120);
+                    tracker.hexes[currentHex].originalcolor = tracker.factions[tracker.constellations[constellation].faction].color;
+                    if(tracker.hexes.hasOwnProperty(currentHex)){
+                        newHex = tracker.hexes[currentHex];
+                        newHex.color(newColor);
+                    }
+                }
+
+
+            }
+        }
+        resolve();
+    });
+}
+
+
 
 function recolorPlanets() {
     return new Promise(resolve => {
@@ -803,7 +887,13 @@ function displayAssetTooltip(id) {
         let in_range = inRange(asset.hex, asset.range);
         in_range.forEach(hex => {
             let h = tracker.hexes[hex];
-            h.color('#292929');
+            if (h.originalcolor != '#222222'){
+                h.color(h.originalcolor);
+            }else{
+                h.color('#4C4C4C');   
+            }
+
+            //h.color(h.originalcolor);
             if (h.system !== '') {
                 tracker.systems[h.system].planets.forEach(planet => {
                     if (tracker.planets.hasOwnProperty(planet)) {
@@ -861,4 +951,73 @@ function displayFactionInfo(id) {
         getElem('faction-info-goal-name').style.display = 'none';
         getElem('faction-info-goal-desc').style.display = 'none';
     }
+}
+
+function hideConstellationInfo() {
+    getElem('constellation-info').style.opacity = '0';
+    constellationInfoTimeout = setTimeout(() => {
+        getElem('constellation-info').style.display = 'none';
+    }, 200);
+}
+
+function displayConstellationInfo(id) {
+    let constellation = tracker.constellations[decodeURIComponent(id)];
+    clearTimeout(constellationInfoTimeout);
+    getElem('constellation-info').style.display = 'block';
+    getElem('constellation-info').style.opacity = '1';
+
+    getElem('constellation-info-header-left').innerHTML = constellation.name;
+    getElem('constellation-info-header-right').innerHTML = constellation.faction;
+    getElem('constellation-info-bonus-val').innerHTML = constellation.bonus;
+    getElem('constellation-info-hexes-val').innerHTML = constellation.memberListSpaces;
+    //getElem('faction-info-stat-wealth').innerHTML = faction.wealth;
+    //getElem('faction-info-stat-hp').innerHTML = `${faction.hp}/${faction.maxhp}`;
+    //getElem('faction-info-stat-income').innerHTML = faction.income;
+    //getElem('faction-info-stat-balance').innerHTML = faction.balance;
+    //getElem('faction-info-stat-xp').innerHTML = faction.xp;
+
+}
+
+function shadeColor(color,amount){
+    let colorShort = color.replace(/^#/,'');
+    let redVal = parseInt(colorShort.slice(0,2),16)+amount;
+    let greenVal = parseInt(colorShort.slice(2,4),16)+amount;
+    let blueVal = parseInt(colorShort.slice(4,6),16)+amount;
+
+    //this is needed for the shade amount, remove if we don't use that
+    redVal = Math.max(Math.min(255, redVal), 0);
+    greenVal = Math.max(Math.min(255, greenVal), 0);
+    blueVal = Math.max(Math.min(255, blueVal), 0);
+
+    let CVal = Math.round((redVal/255)*100)/100;
+    let MVal = Math.round((greenVal/255)*100)/100;
+    let YVal = Math.round((blueVal/255)*100)/100;
+
+    let KVal = Math.round((1-Math.max(CVal,MVal,YVal))*100)/100;
+
+    CVal = Math.round((1-CVal-KVal)/(1-KVal)*100)/100;
+    MVal = Math.round((1-MVal-KVal)/(1-KVal)*100)/100;
+    YVal = Math.round((1-YVal-KVal)/(1-KVal)*100)/100;
+
+    //Average new color and backgound
+    let blendC = Math.round(((1+CVal)/2)*100)/100;
+    let blendM = Math.round(((1+MVal)/2)*100)/100;
+    let blendY = Math.round(((1+YVal)/2)*100)/100;
+    let blendK = Math.round(((1+KVal)/2)*100)/100;
+
+    let blendR = Math.round((255*(1-blendC)*(1-blendK)));
+    let blendG = Math.round((255*(1-blendM)*(1-blendK)));
+    let blendB = Math.round((255*(1-blendY)*(1-blendK)));
+    
+
+    blendR = blendR.toString(16);
+    blendG = blendG.toString(16);
+    blendB = blendB.toString(16);
+    let colorArray = [blendR,blendG,blendB]
+    for(let colorVal in colorArray){
+        if(colorArray[colorVal].length < 2){
+            colorArray[colorVal] = '0'+colorArray[colorVal]
+        }
+    }
+    return('#'+colorArray[0]+colorArray[1]+colorArray[2]);
 }
