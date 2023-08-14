@@ -55,7 +55,7 @@ function parseURLParams() {
 }
 
 function fixURL(url) {
-    return 'https://unrestrictedlorefare.com:8443/' + url;
+    return 'https://cors.unrestrictedlorefare.com/' + url;
 }
 
 function fetchURLs(url) {

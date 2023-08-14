@@ -1,4 +1,4 @@
-FROM nginx:1.23.3-alpine
+FROM nginx:stable-alpine
 
 # Move in our website
 COPY html /usr/share/nginx/html
