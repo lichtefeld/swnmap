@@ -117,7 +117,15 @@ function fetchSheets(urls) {
         .then(val => {
             return val === ':(' ? ':(' : tsvJSON(val);
         });
-    return Promise.all([PlanetMap, SectorObjects, FactionTracker, AssetTracker]);
+    let ConstellationTracker = fetch(fixURL(urls['Constellations']))
+        .then(handleErrors)
+        .then(val => {
+            return val === ':(' ? ':(' : val.text();
+        })
+        .then(val => {
+            return val === ':(' ? ':(' : tsvJSON(val);
+        });
+    return Promise.all([PlanetMap, SectorObjects, FactionTracker, AssetTracker, ConstellationTracker]);
 }
 
 function mapFromSheets(sheets, params) {
