@@ -74,7 +74,7 @@ function fetchURLs(url) {
                 return new Promise(resolve => {
                     let urls = {};
                     val.forEach(row => {
-                        if (['FactionTracker', 'AssetTracker', 'PlanetMap', 'SectorObjects'].includes(row['Tab'])) {
+                        if (['FactionTracker', 'AssetTracker', 'PlanetMap', 'SectorObjects','Constellations'].includes(row['Tab'])) {
                             urls[row['Tab']] = row['Publishing Link'];
                         }
                     });
