@@ -9,6 +9,7 @@ class Hex {
         this.x = pixel.x + this.w / 2;
         this.y = pixel.y + this.h / 2;
         this.vertices = hexVertices(this.x, this.y, this.w, this.h);
+        this.originalcolor = '#222222';
 
         // Render hex
         g
@@ -48,6 +49,10 @@ class Hex {
         this.hex.setAttribute('points', this.vertices);
         this.text.setAttribute('x', this.x);
         this.text.setAttribute('y', this.y + 0.45 * this.h);
+    }
+
+    changeOriginalColor(c){
+        this.originalcolor = c;
     }
 }
 
@@ -460,6 +465,7 @@ class Asset {
         });
     }
 
+
     replace() {
         this.container.childNodes.forEach(child => {
             if (child.classList.contains('hover')) {
@@ -477,4 +483,15 @@ class Asset {
             }
         });
     }
+}
+class Constellation{
+    constructor(constellationData) {
+        this.name = constellationData['Name'];
+        this.faction = constellationData['Faction']
+        this.bonus = constellationData['Bonus']
+        this.memberList = constellationData['Hex List'].split(',').sort();
+        this.memberListSpaces = constellationData['Hex List'].replaceAll(',',', ');
+        this.color = '#000000';
+    }
+        
 }
