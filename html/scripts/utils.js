@@ -1,3 +1,5 @@
+let SHEET_NAMES = ['FactionTracker', 'AssetTracker', 'PlanetMap', 'SectorObjects', 'Constellations', 'Assets', 'FactionTags', 'Goals', 'Status']
+
 function log(obj) {
     console.log(obj);
 }
@@ -74,7 +76,7 @@ function fetchURLs(url) {
                 return new Promise(resolve => {
                     let urls = {};
                     val.forEach(row => {
-                        if (['FactionTracker', 'AssetTracker', 'PlanetMap', 'SectorObjects','Constellations'].includes(row['Tab'])) {
+                        if (SHEET_NAMES.includes(row['Tab'])) {
                             urls[row['Tab']] = row['Publishing Link'];
                         }
                     });
@@ -125,24 +127,58 @@ function fetchSheets(urls) {
         .then(val => {
             return val === ':(' ? ':(' : tsvJSON(val);
         });
-    return Promise.all([PlanetMap, SectorObjects, FactionTracker, AssetTracker, ConstellationTracker]);
+    let Assets = fetch(fixURL(urls['Assets']))
+        .then(handleErrors)
+        .then(val => {
+            return val === ':(' ? ':(' : val.text();
+        })
+        .then(val => {
+            return val === ':(' ? ':(' : tsvJSON(val);
+        })
+    let FactionTags = fetch(fixURL(urls['FactionTags']))
+        .then(handleErrors)
+        .then(val => {
+            return val === ':(' ? ':(' : val.text();
+        })
+        .then(val => {
+            return val === ':(' ? ':(' : tsvJSON(val);
+        })
+    let Goals = fetch(fixURL(urls['Goals']))
+        .then(handleErrors)
+        .then(val => {
+            return val === ':(' ? ':(' : val.text();
+        })
+        .then(val => {
+            return val === ':(' ? ':(' : tsvJSON(val);
+        })
+    let Status = fetch(fixURL(urls['Status']))
+        .then(handleErrors)
+        .then(val => {
+            return val === ':(' ? ':(' : val.text();
+        })
+        .then(val => {
+            return val === ':(' ? ':(' : tsvJSON(val);
+        })
+    return Promise.all([PlanetMap, SectorObjects, FactionTracker, AssetTracker, ConstellationTracker, Assets, FactionTags, Goals, Status]);
 }
 
 function mapFromSheets(sheets, params) {
-
-    let sheet_names = ['PlanetMap', 'SectorObjects', 'FactionTracker', 'AssetTracker','Constellations'];
     let redirect = false;
     let missing = [];
     sheets.forEach((sheet, index) => {
         if (sheet === ':(') {
             redirect = true;
-            missing.push(sheet_names[index]);
+            missing.push(SHEET_NAMES[index]);
         }
     });
 
     if (redirect) {
         landingPage(missing);
     } else {
+        buildAssets(sheets[5]);
+        buildFactionTags(sheets[6]);
+        buildGoals(sheets[7]);
+        buildStatuses(sheets[8]);
         buildInterface();
         buildGrid(sheets, params)
             .then(payload => seedFactions(payload, sheets))
@@ -169,8 +205,51 @@ function landingPage(errors) {
     document.body.appendChild(missing);
 }
 
-function buildInterface() {
+function buildAssets(asset_sheet) {
+    asset_sheet.forEach(asset => {
+        assets[asset['Asset']] = {
+            'STAT': asset['Stat'],
+            'STAT_TIER': asset['Tier'],
+            'ASSET': asset['Asset'],
+            'HP': asset['H{'],
+            'COST': asset['Cost'],
+            'TL': asset['Tech Level'],
+            'TYPE': asset['Type'],
+            'ATTACK': asset['Attack Stat'],
+            'DEFENSE': asset['Defense Stat'],
+            'ATK_NUM_DICE': asset['Atk Num Dice'],
+            'ATK_NUM_SIDES': asset['Atk Num Sides'],
+            'ATK_MOD': asset['Atk Mod'],
+            'DEF_NUM_DICE': asset['Def Num Dice'],
+            'DEF_NUM_SIDES': asset['Def Num Sides'],
+            'DEF_MOD': asset['Def Mod'],
+            'PERM': '',
+            'SPECIAL': asset['Details'],
+            'UPKEEP': asset['Upkeep'],
+            'RANGE': asset['Range']
+        }
+    })
+}
 
+function buildFactionTags(tags_sheet) {
+    tags_sheet.forEach(tag => {
+        factionTags[tag['Tag']] = tag['Description']
+    })
+}
+
+function buildGoals(goals_sheet) {
+    goals_sheet.forEach(goal => {
+        goals[goal['Goal']] = goal['Description']
+    })
+}
+
+function buildStatuses(status_sheet) {
+    status_sheet.forEach(status => {
+        statuses[status['Status']] = status['Description']
+    })
+}
+
+function buildInterface() {
     // Viewer
     window.svg = d3.select('#viewer')
         .append('svg')
@@ -397,7 +476,7 @@ function seedAssets(payload, sheets) {
         let asset_cnt = 0;
         sheets[3].forEach(asset => {
             if (asset['Asset'] !== '') {
-                if (assets.hasOwnProperty(asset['Asset']) || asset['Asset'] === 'Base Of Influence') {
+                if (assets.hasOwnProperty(asset['Asset'])) {
                     let id = 'asset-' + asset_cnt.toString().padStart(assets_pad_length, '0');
                     tracker.assets[id] = new Asset(id, asset);
                     tracker.planets[asset['Location'].split(' / ')[2]].localAssets.push(id);
