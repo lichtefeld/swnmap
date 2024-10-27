@@ -56,12 +56,8 @@ function parseURLParams() {
     });
 }
 
-function fixURL(url) {
-    return 'https://cors.unrestrictedlorefare.com/' + url;
-}
-
 function fetchURLs(url) {
-    return fetch(fixURL(url))
+    return fetch(url)
         .then(handleErrors)
         .then(val => {
             return val === ':(' ? ':(' : val.text();
@@ -87,7 +83,7 @@ function fetchURLs(url) {
 }
 
 function fetchSheets(urls) {
-    let PlanetMap = fetch(fixURL(urls['PlanetMap']))
+    let PlanetMap = fetch(urls['PlanetMap'])
         .then(handleErrors)
         .then(val => {
             return val === ':(' ? ':(' : val.text();
@@ -95,7 +91,7 @@ function fetchSheets(urls) {
         .then(val => {
             return val === ':(' ? ':(' : tsvJSON(val);
         });
-    let SectorObjects = fetch(fixURL(urls['SectorObjects']))
+    let SectorObjects = fetch(urls['SectorObjects'])
         .then(handleErrors)
         .then(val => {
             return val === ':(' ? ':(' : val.text();
@@ -103,7 +99,7 @@ function fetchSheets(urls) {
         .then(val => {
             return val === ':(' ? ':(' : tsvJSON(val);
         });
-    let FactionTracker = fetch(fixURL(urls['FactionTracker']))
+    let FactionTracker = fetch(urls['FactionTracker'])
         .then(handleErrors)
         .then(val => {
             return val === ':(' ? ':(' : val.text();
@@ -111,7 +107,7 @@ function fetchSheets(urls) {
         .then(val => {
             return val === ':(' ? ':(' : tsvJSON(val);
         });
-    let AssetTracker = fetch(fixURL(urls['AssetTracker']))
+    let AssetTracker = fetch(urls['AssetTracker'])
         .then(handleErrors)
         .then(val => {
             return val === ':(' ? ':(' : val.text();
@@ -119,7 +115,7 @@ function fetchSheets(urls) {
         .then(val => {
             return val === ':(' ? ':(' : tsvJSON(val);
         });
-    let ConstellationTracker = fetch(fixURL(urls['Constellations']))
+    let ConstellationTracker = fetch(urls['Constellations'])
         .then(handleErrors)
         .then(val => {
             return val === ':(' ? ':(' : val.text();
@@ -127,7 +123,7 @@ function fetchSheets(urls) {
         .then(val => {
             return val === ':(' ? ':(' : tsvJSON(val);
         });
-    let Assets = fetch(fixURL(urls['Assets']))
+    let Assets = fetch(urls['Assets'])
         .then(handleErrors)
         .then(val => {
             return val === ':(' ? ':(' : val.text();
@@ -135,7 +131,7 @@ function fetchSheets(urls) {
         .then(val => {
             return val === ':(' ? ':(' : tsvJSON(val);
         })
-    let FactionTags = fetch(fixURL(urls['FactionTags']))
+    let FactionTags = fetch(urls['FactionTags'])
         .then(handleErrors)
         .then(val => {
             return val === ':(' ? ':(' : val.text();
@@ -143,7 +139,7 @@ function fetchSheets(urls) {
         .then(val => {
             return val === ':(' ? ':(' : tsvJSON(val);
         })
-    let Goals = fetch(fixURL(urls['Goals']))
+    let Goals = fetch(urls['Goals'])
         .then(handleErrors)
         .then(val => {
             return val === ':(' ? ':(' : val.text();
@@ -151,7 +147,7 @@ function fetchSheets(urls) {
         .then(val => {
             return val === ':(' ? ':(' : tsvJSON(val);
         })
-    let Status = fetch(fixURL(urls['Status']))
+    let Status = fetch(urls['Status'])
         .then(handleErrors)
         .then(val => {
             return val === ':(' ? ':(' : val.text();
