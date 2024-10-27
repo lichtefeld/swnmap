@@ -47,11 +47,11 @@ function parseURLParams() {
     return new Promise(resolve => {
         const query = window.location.search;
         const params = new URLSearchParams(query);
-        const url = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ9C9CpyWM6Xwp-8WXCWZ2SeBXLIQT_Dkeee2xgkwvAvwZMLyE1OxwnHCNw8Sm44ebMj9Ie0oVPACqx/pub?gid=1077502528&single=true&output=tsv';
+        const url = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ_X1jFWcTOAz26SX2COhBcti-JUf_UygkdqPSGg12815tIkGnnfMr14putQEDBxjRgsKEo9OW09VZh/pub?gid=1077502528&single=true&output=tsv';
         resolve({
             'url': decodeURIComponent(url),
-            'cols': 19,
-            'rows': 19
+            'cols': 16,
+            'rows': 5
         });
     });
 }
